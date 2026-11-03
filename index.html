@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0b0e14">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<title>Tablica rynków</title>
+<style>
+  :root { --bg: #0b0e14; --dot: #3a4152; --dot-on: #e8eaf0; --tape-h: 46px; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; background: var(--bg); overflow: hidden; overscroll-behavior: none; }
+  body { display: flex; flex-direction: column; font-family: system-ui, sans-serif; -webkit-user-select: none; user-select: none; }
+
+  #viewport { position: relative; flex: 1; overflow: hidden; }
+  #track { position: relative; height: 100%; }
+  /* wszystkie wykresy leżą na ekranie jeden na drugim (ukryte też muszą się rysować) */
+  .slide { position: absolute; inset: 0; opacity: 0; z-index: 0; transition: transform .35s ease, opacity .35s ease; }
+  .slide.on { opacity: 1; z-index: 1; }
+  .slide .tradingview-widget-container, .slide .tradingview-widget-container__widget { height: 100%; width: 100%; }
+  /* wykres tylko do oglądania: dotyk idzie do przesuwania */
+  .slide iframe { pointer-events: none; }
+  #swipe { position: absolute; inset: 0; z-index: 5; touch-action: pan-y; }
+
+  #dots { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 6; }
+  #dots span { width: 8px; height: 8px; border-radius: 50%; background: var(--dot); transition: background .2s; }
+  #dots span.on { background: var(--dot-on); }
+
+  #tape { height: var(--tape-h); flex: 0 0 var(--tape-h); border-top: 1px solid #1c2130; }
+</style>
+</head>
+<body>
+<div id="viewport">
+  <div id="track"></div>
+  <div id="swipe"></div>
+  <div id="dots"></div>
+</div>
+<div id="tape"><div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div></div></div>
+
+<script>
+// Wykresy w kolejności przesuwania. Symbole z darmowych widżetów TradingView (ceny na żywo).
+const CHARTS = [
+  { symbol: 'BITSTAMP:BTCUSD',  interval: '60' },  // Bitcoin
+  { symbol: 'FOREXCOM:NSXUSD',  interval: '60' },  // Nasdaq 100
+  { symbol: 'FX:EURUSD',        interval: '60' },  // EUR/USD
+  { symbol: 'FOREXCOM:SPXUSD',  interval: '60' },  // S&P 500
+];
+
+const TAPE = [
+  ['FOREXCOM:SPXUSD', 'S&P 500'], ['FOREXCOM:NSXUSD', 'Nasdaq 100'], ['BITSTAMP:BTCUSD', 'Bitcoin'],
+  ['BITSTAMP:ETHUSD', 'Ethereum'], ['FX:EURUSD', 'EUR/USD'], ['FX_IDC:USDPLN', 'USD/PLN'], ['TVC:GOLD', 'Złoto'],
+  ['NASDAQ:NVDA', 'Nvidia'], ['NASDAQ:AAPL', 'Apple'], ['NASDAQ:MSFT', 'Microsoft'], ['NASDAQ:GOOGL', 'Alphabet'],
+  ['NASDAQ:AMZN', 'Amazon'], ['NASDAQ:META', 'Meta'], ['NASDAQ:TSLA', 'Tesla'], ['NASDAQ:PLTR', 'Palantir'],
+];
+
+function embed(container, file, config) {
+  const s = document.createElement('script');
+  s.src = 'https://s3.tradingview.com/external-embedding/' + file;
+  s.async = true;
+  s.text = JSON.stringify(config);
+  container.appendChild(s);
+}
+
+const track = document.getElementById('track');
+const dots = document.getElementById('dots');
+
+CHARTS.forEach((c, i) => {
+  const slide = document.createElement('div');
+  slide.className = 'slide';
+  slide.innerHTML = '<div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div></div>';
+  track.appendChild(slide);
+  dots.appendChild(document.createElement('span'));
+  // ładowanie po kolei, żeby słaby tablet się nie dławił
+  setTimeout(() => embed(slide.firstChild, 'embed-widget-advanced-chart.js', {
+    autosize: true, symbol: c.symbol, interval: c.interval, timezone: 'Europe/Warsaw',
+    theme: 'dark', style: '1', locale: 'pl', backgroundColor: '#0b0e14',
+    hide_top_toolbar: true, hide_side_toolbar: true, hide_volume: true,
+    allow_symbol_change: false, save_image: false, calendar: false,
+    support_host: 'https://www.tradingview.com',
+  }), i * 1500);
+});
+
+embed(document.querySelector('#tape .tradingview-widget-container'), 'embed-widget-ticker-tape.js', {
+  symbols: TAPE.map(([proName, title]) => ({ proName, title })),
+  showSymbolLogo: true, isTransparent: true, displayMode: 'adaptive', colorTheme: 'dark', locale: 'pl',
+});
+
+// --- przesuwanie palcem ---
+let current = 0;
+try { current = Math.min(+localStorage.getItem('slide') || 0, CHARTS.length - 1); } catch (e) {}
+
+const slides = track.children;
+
+function show(i, dir = 0) {
+  const prev = slides[current];
+  current = (i + CHARTS.length) % CHARTS.length;  // w kółko
+  const next = slides[current];
+  if (dir && next !== prev) {
+    // nowy wjeżdża z boku, stary odjeżdża w drugą stronę
+    next.style.transition = 'none';
+    next.style.transform = `translateX(${dir * 100}%)`;
+    next.offsetWidth;
+    next.style.transition = '';
+    prev.style.transform = `translateX(${-dir * 100}%)`;
+    setTimeout(() => { prev.style.transition = 'none'; prev.style.transform = ''; prev.offsetWidth; prev.style.transition = ''; }, 400);
+  }
+  next.style.transform = '';
+  [...slides].forEach((s, k) => s.classList.toggle('on', k === current));
+  [...dots.children].forEach((d, k) => d.classList.toggle('on', k === current));
+  try { localStorage.setItem('slide', current); } catch (e) {}
+}
+show(current);
+
+const swipe = document.getElementById('swipe');
+let startX = null, startY = 0, dx = 0;
+swipe.addEventListener('touchstart', e => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; dx = 0; slides[current].style.transition = 'none'; }, { passive: true });
+swipe.addEventListener('touchmove', e => {
+  if (startX === null) return;
+  dx = e.touches[0].clientX - startX;
+  if (Math.abs(dx) > Math.abs(e.touches[0].clientY - startY))
+    slides[current].style.transform = `translateX(${dx}px)`;
+}, { passive: true });
+swipe.addEventListener('touchend', () => {
+  if (startX === null) return;
+  startX = null;
+  slides[current].style.transition = '';
+  if (dx < -60) show(current + 1, 1); else if (dx > 60) show(current - 1, -1); else show(current);
+});
+// na komputerze: strzałki i kliknięcie w kropki
+document.addEventListener('keydown', e => { if (e.key === 'ArrowRight') show(current + 1, 1); if (e.key === 'ArrowLeft') show(current - 1, -1); });
+
+// odświeżenie co 4 godziny, żeby strona nie zamulała po całym dniu
+setTimeout(() => location.reload(), 4 * 60 * 60 * 1000);
+</script>
+</body>
+</html>
