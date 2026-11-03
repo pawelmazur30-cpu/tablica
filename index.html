@@ -44,19 +44,19 @@
 <div id="tape"><div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div></div></div>
 
 <script>
-// Wykresy w kolejności przesuwania. Symbole z darmowych widżetów TradingView (ceny na żywo).
+// Wykresy: krypto z OKX, reszta z Tickmill (akcji Tickmill nie ma w TradingView, więc spółki z NASDAQ).
 const CHARTS = [
-  { name: 'Bitcoin',    symbol: 'BITSTAMP:BTCUSD' },
-  { name: 'Nasdaq 100', symbol: 'FOREXCOM:NSXUSD' },
-  { name: 'EUR/USD',    symbol: 'FX:EURUSD' },
-  { name: 'S&P 500',    symbol: 'FOREXCOM:SPXUSD' },
+  { name: 'Bitcoin',    symbol: 'OKX:BTCUSDT' },
+  { name: 'Nasdaq 100', symbol: 'TICKMILL:USTEC' },
+  { name: 'EUR/USD',    symbol: 'TICKMILL:EURUSD' },
+  { name: 'S&P 500',    symbol: 'TICKMILL:US500' },
 ];
 
 const INTERVALS =[['5', '5m'], ['15', '15m'], ['60', '1h'], ['240', '4h'], ['D', '1D']];
 
 const TAPE = [
-  ['FOREXCOM:SPXUSD', 'S&P 500'], ['FOREXCOM:NSXUSD', 'Nasdaq 100'], ['BITSTAMP:BTCUSD', 'Bitcoin'],
-  ['BITSTAMP:ETHUSD', 'Ethereum'], ['FX:EURUSD', 'EUR/USD'], ['FX_IDC:USDPLN', 'USD/PLN'], ['TVC:GOLD', 'Złoto'],
+  ['TICKMILL:US500', 'S&P 500'], ['TICKMILL:USTEC', 'Nasdaq 100'], ['OKX:BTCUSDT', 'Bitcoin'],
+  ['OKX:ETHUSDT', 'Ethereum'], ['TICKMILL:EURUSD', 'EUR/USD'], ['TICKMILL:USDPLN', 'USD/PLN'], ['TICKMILL:XAUUSD', 'Złoto'],
   ['NASDAQ:NVDA', 'Nvidia'], ['NASDAQ:AAPL', 'Apple'], ['NASDAQ:MSFT', 'Microsoft'], ['NASDAQ:GOOGL', 'Alphabet'],
   ['NASDAQ:AMZN', 'Amazon'], ['NASDAQ:META', 'Meta'], ['NASDAQ:TSLA', 'Tesla'], ['NASDAQ:PLTR', 'Palantir'],
 ];
