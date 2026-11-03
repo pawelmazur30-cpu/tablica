@@ -4,12 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#0b0e14">
+<meta name="theme-color" content="#414141">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png">
 <title>Tablica rynków</title>
 <style>
-  :root { --bg: #0b0e14; --line: #1c2130; --text: #9aa3b5; --on: #e8eaf0; --accent: #26a69a; --bar-h: 56px; --tape-h: 46px; }
+  :root { --bg: #414141; --line: #555555; --text: #c8c8c8; --on: #ffffff; --accent: #ffffff; --bar-h: 56px; --tape-h: 46px; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; background: var(--bg); overflow: hidden; overscroll-behavior: none; }
   body { display: flex; flex-direction: column; font-family: system-ui, sans-serif; -webkit-user-select: none; user-select: none; }
@@ -20,14 +20,17 @@
   .group { display: flex; gap: 6px; }
   #bar button { font: 600 17px system-ui, sans-serif; color: var(--text); background: none; border: 1px solid transparent;
                 border-radius: 10px; padding: 9px 16px; }
-  #bar button.on { color: var(--on); background: #1c2130; border-color: #2a3142; }
-  #intervals button.on { color: var(--bg); background: var(--accent); border-color: var(--accent); }
+  #bar button.on { color: var(--on); background: #555555; border-color: #666666; }
+  #intervals button.on { color: #000000; background: var(--accent); border-color: var(--accent); }
 
   #viewport { position: relative; flex: 1; overflow: hidden; }
   /* wszystkie wykresy leżą na ekranie jeden na drugim (ukryte też muszą się rysować) */
   .slide { position: absolute; inset: 0; opacity: 0; z-index: 0; pointer-events: none; transition: opacity .3s ease; }
   .slide.on { opacity: 1; z-index: 1; pointer-events: auto; }
   .slide .tradingview-widget-container, .slide .tradingview-widget-container__widget { height: 100%; width: 100%; }
+  /* widżet nie pozwala zmienić kolorów świec, więc filtr robi z zielonych (jasność 0,47) białe,
+     z czerwonych (0,37) czarne, a tło widżetu #686868 daje szare #414141 */
+  .slide iframe { filter: grayscale(1) brightness(1.183) contrast(14); }
 
   #tape { flex: 0 0 var(--tape-h); border-top: 1px solid var(--line); }
 </style>
@@ -49,7 +52,7 @@ const CHARTS = [
   { name: 'S&P 500',    symbol: 'FOREXCOM:SPXUSD' },
 ];
 
-const INTERVALS = [['5', '5m'], ['15', '15m'], ['60', '1h'], ['240', '4h'], ['D', '1D']];
+const INTERVALS =[['5', '5m'], ['15', '15m'], ['60', '1h'], ['240', '4h'], ['D', '1D']];
 
 const TAPE = [
   ['FOREXCOM:SPXUSD', 'S&P 500'], ['FOREXCOM:NSXUSD', 'Nasdaq 100'], ['BITSTAMP:BTCUSD', 'Bitcoin'],
@@ -81,7 +84,7 @@ function drawChart(i) {
   slide.innerHTML = '<div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div></div>';
   embed(slide.firstChild, 'embed-widget-advanced-chart.js', {
     autosize: true, symbol: CHARTS[i].symbol, interval: intervals[i], timezone: 'Europe/Warsaw',
-    theme: 'dark', style: '1', locale: 'pl', backgroundColor: '#0b0e14',
+    theme: 'dark', style: '1', locale: 'pl', backgroundColor: '#686868', gridColor: '#696969',
     hide_top_toolbar: true, hide_side_toolbar: true, hide_volume: true,
     allow_symbol_change: false, save_image: false, calendar: false,
     support_host: 'https://www.tradingview.com',
