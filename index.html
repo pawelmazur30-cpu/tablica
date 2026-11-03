@@ -84,7 +84,7 @@ function drawChart(i) {
   slide.innerHTML = '<div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div></div>';
   embed(slide.firstChild, 'embed-widget-advanced-chart.js', {
     autosize: true, symbol: CHARTS[i].symbol, interval: intervals[i], timezone: 'Europe/Warsaw',
-    theme: 'dark', style: '1', locale: 'pl', backgroundColor: '#686868', gridColor: '#696969',
+    theme: 'dark', style: '1', locale: 'pl', backgroundColor: '#686868', gridColor: '#6a6a6a',
     hide_top_toolbar: true, hide_side_toolbar: true, hide_volume: true,
     allow_symbol_change: false, save_image: false, calendar: false,
     support_host: 'https://www.tradingview.com',
